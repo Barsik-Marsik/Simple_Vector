@@ -28,6 +28,7 @@ The template class __SimpleVector`<`Type`>`__ is a container that is a simplifie
 - GetSize
 - GetCapacity
 - IsEmpty
+- Reserve
 
 #### Modifiers
 

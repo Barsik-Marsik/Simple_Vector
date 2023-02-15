@@ -8,6 +8,18 @@
 
 #include "array_ptr.h"
 
+struct ReserveProxyObj {
+    explicit ReserveProxyObj(size_t new_capacity)
+        : capacity_(new_capacity) {
+    }
+
+    size_t capacity_;
+};
+
+ReserveProxyObj Reserve(size_t capacity_to_reserve) {
+    return ReserveProxyObj(capacity_to_reserve);
+}
+
 template <typename Type>
 class SimpleVector {
 public:
@@ -54,6 +66,10 @@ public:
         items_.swap(new_items);
         size_ = other.GetSize();
         capacity_ = other.GetCapacity();
+    }
+    
+    SimpleVector(const ReserveProxyObj& proxyObj) {
+        Reserve(proxyObj.capacity_);
     }
 
     SimpleVector& operator=(const SimpleVector& rhs) {
@@ -127,6 +143,15 @@ public:
         std::copy(new_pos + 1, end(), new_pos);
         --size_;
         return new_pos;
+    }
+
+    void Reserve(const size_t new_capacity) {
+        if (new_capacity > capacity_) {
+            ArrayPtr<Type> new_items(new_capacity);
+            std::copy(begin(), end(), new_items.Get());
+            items_.swap(new_items);
+            capacity_ = new_capacity;
+        }
     }
 
     // Возвращает количество элементов в массиве
