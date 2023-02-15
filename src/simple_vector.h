@@ -27,6 +27,7 @@ ReserveProxyObj Reserve(size_t capacity_to_reserve) {
 template <typename Type>
 class SimpleVector {
 public:
+    using ItemsPtr = ArrayPtr<Type>;
     using Iterator = Type*;
     using ConstIterator = const Type*;
 
@@ -312,6 +313,21 @@ public:
     }
 
 private:
+void ResizeCapacity(size_t new_capacity) {
+        ArrayPtr<Type> tmp_data(new_capacity);
+        std::move(std::make_move_iterator(begin()),
+                  std::make_move_iterator(end()), &tmp_data[0]);
+        items_ = std::move(tmp_data);
+        capacity_ = new_capacity;
+    }
+
+ItemsPtr ReallocateCopy(size_t new_capacity) const {
+        ItemsPtr new_items(new_capacity);  // может бросить исключение
+        size_t copy_size = std::min(new_capacity, size_);
+        std::copy(items_.Get(), items_.Get() + copy_size, new_items.Get());  // может бросить исключение
+        return ItemsPtr(new_items.Release());
+    }
+
     ArrayPtr<Type> items_{};
     size_t size_ = 0;
     size_t capacity_ = 0;
