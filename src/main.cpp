@@ -7,7 +7,7 @@
 int main() {
     Test1();
     Test2();
-	Test3();
+    Test3();
     std::cerr << "OK";
     return 0;
 }
