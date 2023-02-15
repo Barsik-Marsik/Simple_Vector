@@ -11,7 +11,9 @@ The template class __SimpleVector`<`Type`>`__ is a container that is a simplifie
     - parameterized
     - constructor from __std::initializer_list__
     - copy constructor
+    - move constructor
 - operator=
+- move operator
 
 #### Element access
 
@@ -53,12 +55,13 @@ The template class __SimpleVector`<`Type`>`__ is a container that is a simplifie
 
 The template class __ArrayPtr`<`Type`>`__ is a smart pointer to an array in heap that has the following functionality:
 
-- Constructors: default, parameterized
+- Constructors: default, parameterized, move
 - prohibition of copy and assignment operations
 - swap
 - Release
 - Get
 - operarator[]
+- move operator
 
 
 The memory is freed automatically when the __ArrayPtr__ is destroyed.

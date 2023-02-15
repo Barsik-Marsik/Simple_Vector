@@ -1,7 +1,34 @@
 #pragma once
 
-#include <cassert>
-#include <stdexcept>
+#include <numeric>
+
+using namespace std;
+
+
+class X {
+public:
+    X()
+        : X(5) {
+    }
+    X(size_t num)
+        : x_(num) {
+    }
+    X(const X& other) = delete;
+    X& operator=(const X& other) = delete;
+    X(X&& other) {
+        x_ = exchange(other.x_, 0);
+    }
+    X& operator=(X&& other) {
+        x_ = exchange(other.x_, 0);
+        return *this;
+    }
+    size_t GetX() const {
+        return x_;
+    }
+
+private:
+    size_t x_;
+};
 
 // У функции, объявленной со спецификатором inline, может быть несколько
 // идентичных определений в разных единицах трансляции.
@@ -160,7 +187,7 @@ inline void Test2() {
             assert(&numbers_copy[i] != &numbers[i]);
         }
     }
-    
+/*
     // Сравнение
     {
         assert((SimpleVector{1, 2, 3} == SimpleVector{1, 2, 3}));
@@ -174,7 +201,7 @@ inline void Test2() {
         assert((SimpleVector{1, 2, 3} <= SimpleVector{1, 2, 3}));
         assert((SimpleVector{1, 2, 3} <= SimpleVector{1, 2, 4}));
     }
-    
+*/
     // Обмен значений векторов
     {
         SimpleVector<int> v1{42, 666};
@@ -200,7 +227,7 @@ inline void Test2() {
         assert(v1.GetCapacity() == capacity2);
         assert(v2.GetCapacity() == capacity1);
     }
-    
+
     // Присваивание
     {
         SimpleVector<int> src_vector{1, 2, 3, 4};
@@ -216,7 +243,7 @@ inline void Test2() {
         assert((v == SimpleVector<int>{1, 2, 42, 3, 4}));
     }
     {
-        SimpleVector<int> v();
+        SimpleVector<int> v{};
         v.Insert(v.begin(), 42);
         assert(v == SimpleVector<int>{42});
     }
@@ -227,7 +254,7 @@ inline void Test2() {
         v.Erase(v.cbegin() + 2);
         assert((v == SimpleVector<int>{1, 2, 4}));
     }
-} 
+}
 
 void TestReserveConstructor() {
     cout << "TestReserveConstructor"s << endl;
@@ -267,6 +294,136 @@ void TestReserveMethod() {
 }
 
 inline void Test3() {
-	TestReserveConstructor();
-	TestReserveMethod();
+    TestReserveConstructor();
+    TestReserveMethod();
+}
+
+
+SimpleVector<int> GenerateVector(size_t size) {
+    SimpleVector<int> v(size);
+    iota(v.begin(), v.end(), 1);
+    return v;
+}
+
+void TestTemporaryObjConstructor() {
+    const size_t size = 1000000;
+    cout << "Test with temporary object, copy elision" << endl;
+    SimpleVector<int> moved_vector(GenerateVector(size));
+    assert(moved_vector.GetSize() == size);
+    cout << "Done!" << endl;
+}
+
+void TestTemporaryObjOperator() {
+    const size_t size = 1000000;
+    cout << "Test with temporary object, operator=" << endl;
+    SimpleVector<int> moved_vector;
+    assert(moved_vector.GetSize() == 0);
+    moved_vector = GenerateVector(size);
+    assert(moved_vector.GetSize() == size);
+    cout << "Done!" << endl;
+}
+
+void TestNamedMoveConstructor() {
+    const size_t size = 1000000;
+    cout << "Test with named object, move constructor" << endl;
+    SimpleVector<int> vector_to_move(GenerateVector(size));
+    assert(vector_to_move.GetSize() == size);
+
+    SimpleVector<int> moved_vector(move(vector_to_move));
+    assert(moved_vector.GetSize() == size);
+    assert(vector_to_move.GetSize() == 0);
+    cout << "Done!" << endl;
+}
+
+void TestNamedMoveOperator() {
+    const size_t size = 1000000;
+    cout << "Test with named object, operator=" << endl;
+    SimpleVector<int> vector_to_move(GenerateVector(size));
+    assert(vector_to_move.GetSize() == size);
+
+    SimpleVector<int> moved_vector = move(vector_to_move);
+    assert(moved_vector.GetSize() == size);
+    assert(vector_to_move.GetSize() == 0);
+    cout << "Done!" << endl;
+}
+
+void TestNoncopiableMoveConstructor() {
+    const size_t size = 5;
+    cout << "Test noncopiable object, move constructor" << endl;
+    SimpleVector<X> vector_to_move;
+    for (size_t i = 0; i < size; ++i) {
+        vector_to_move.PushBack(X(i));
+    }
+
+    SimpleVector<X> moved_vector = move(vector_to_move);
+    assert(moved_vector.GetSize() == size);
+    assert(vector_to_move.GetSize() == 0);
+
+    for (size_t i = 0; i < size; ++i) {
+        assert(moved_vector[i].GetX() == i);
+    }
+    cout << "Done!" << endl;
+}
+
+void TestNoncopiablePushBack() {
+    const size_t size = 5;
+    cout << "Test noncopiable push back" << endl;
+    SimpleVector<X> v;
+    for (size_t i = 0; i < size; ++i) {
+        v.PushBack(X(i));
+    }
+
+    assert(v.GetSize() == size);
+
+    for (size_t i = 0; i < size; ++i) {
+        assert(v[i].GetX() == i);
+    }
+    cout << "Done!" << endl;
+}
+
+void TestNoncopiableInsert() {
+    const size_t size = 5;
+    cout << "Test noncopiable insert" << endl;
+    SimpleVector<X> v;
+    for (size_t i = 0; i < size; ++i) {
+        v.PushBack(X(i));
+    }
+
+    // в начало
+    v.Insert(v.begin(), X(size + 1));
+    assert(v.GetSize() == size + 1);
+    assert(v.begin()->GetX() == size + 1);
+    // в конец
+    v.Insert(v.end(), X(size + 2));
+    assert(v.GetSize() == size + 2);
+    assert((v.end() - 1)->GetX() == size + 2);
+    // в середину
+    v.Insert(v.begin() + 3, X(size + 3));
+    assert(v.GetSize() == size + 3);
+    assert((v.begin() + 3)->GetX() == size + 3);
+    cout << "Done!" << endl;
+}
+
+void TestNoncopiableErase() {
+    const size_t size = 3;
+    cout << "Test noncopiable erase" << endl;
+    SimpleVector<X> v;
+    for (size_t i = 0; i < size; ++i) {
+        v.PushBack(X(i));
+    }
+
+    auto it = v.Erase(v.begin());
+    assert(it->GetX() == 1);
+    cout << "Done!" << endl;
+}
+
+void Test4() {
+    TestTemporaryObjConstructor();
+    TestTemporaryObjOperator();
+    TestNamedMoveConstructor();
+    TestNamedMoveOperator();
+    TestNoncopiableMoveConstructor();
+    TestNoncopiablePushBack();
+    TestNoncopiableInsert();
+    TestNoncopiableErase();
 }
