@@ -4,13 +4,6 @@ The template class __SimpleVector`<`Type`>`__ is a container that is a simplifie
 
 ## Implemented functionality
 
-#### Constructors
-
-- default
-- Parameterized
-- Constructor from __std::initializer_list__
-- Copy Constructor
-
 #### Member functions
 
 - Constructors:
