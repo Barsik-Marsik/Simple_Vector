@@ -7,8 +7,18 @@ The template class __SimpleVector`<`Type`>`__ is a container that is a simplifie
 #### Constructors
 
 - default
-- Парметризованный конструктор
-- Конструктор из __std::initializer_list__
+- Parameterized
+- Constructor from __std::initializer_list__
+- Copy Constructor
+
+#### Member functions
+
+- Constructors:
+    - default
+    - parameterized
+    - constructor from __std::initializer_list__
+    - copy constructor
+- operator=
 
 #### Element access
 
@@ -28,8 +38,22 @@ The template class __SimpleVector`<`Type`>`__ is a container that is a simplifie
 
 #### Modifiers
 
+- PushBack
+- PopBack
+- Insert
+- Erase
 - Clear
 - Resize
+- swap
+
+#### Non-member functions
+
+- operator==
+- operator!=
+- operator<
+- operator<=
+- operator>
+- operator>=
 
 ## ArrayPtr
 
